@@ -159,7 +159,7 @@ task SliceRemoteFiles {
     export GCS_OAUTH_TOKEN=`gcloud auth application-default print-access-token`
 
     echo -e "\nSLICING QUERY REGIONS FROM VCF, REMOTELY\n"
-    mv ~{vcf_idx} ./
+    mv ~{vcf_idx} .
     bcftools query --format '%CHROM\t%POS\n' ~{vcf} \
     | awk -v OFS="\t" -v buf=~{query_buffer} \
       '{ print $1, $2-buf, $2+buf }' \
@@ -173,7 +173,7 @@ task SliceRemoteFiles {
     if [ ~{n_remote_files} -gt 0 ]; then
       echo -e "\nSLICING REMOTE ANNOTATION FILES:\n"
       mkdir remote_slices
-      mv ~{sep=" " select_all(vep_remote_file_indexes)} ./
+      mv ~{sep=" " select_all(vep_remote_file_indexes)} .
 
       while read uri; do
         local_name=$( basename $uri )
@@ -192,7 +192,7 @@ task SliceRemoteFiles {
     if [ ~{n_gnomad_files} -gt 0 ]; then
       echo -e "\nSLICING GNOMAD VCFs:\n"
       mkdir gnomad_slices/
-      mv ~{sep=" " select_all(gnomad_vcf_indexes)} ./
+      mv ~{sep=" " select_all(gnomad_vcf_indexes)} .
 
       query_fmt="%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER"
       query_keys=$( cat ~{write_lines(select_all(gnomad_infos))} | awk '{ print $1"=%INFO/"$1 }' | paste -s -d\; )
@@ -278,7 +278,7 @@ task RunVep {
     # Relocate other_vep_files to execution directory
     if [ ~{defined(other_vep_files)} == "true" ]; then
       while read file; do
-        mv $file ./
+        mv $file .
       done < ~{write_lines(select_all(other_vep_files))}
     fi
 
