@@ -271,24 +271,38 @@ task RunVep {
   command <<<
     set -eu -o pipefail
 
-    # Unpack contents of cache into $VEP_CACHE/
-    # Note that $VEP_CACHE is a default ENV variable set in VEP docker
-    tar -xzvf ~{vep_cache_tarball} -C $VEP_CACHE/
 
-    # Relocate other_vep_files to execution directory
-    if [ ~{defined(other_vep_files)} == "true" ]; then
-      while read file; do
-        mv $file .
-      done < ~{write_lines(select_all(other_vep_files))}
+    if ~{defined(other_vep_files)}; then
+        # Ensure the file list is not empty
+        if [ -s ~{write_lines(select_all(other_vep_files))} ]; then
+            while read -r file; do
+                if [ -n "$file" ]; then
+                    mv "$file" .
+                fi
+            done < ~{write_lines(select_all(other_vep_files))}
+        else
+            echo "No other VEP files to move."
+        fi
     fi
-
     # Build gnomad annotation command based on gnomad_infos
     gnomad_option=""
     if [ ~{length(gnomad_infos)} -gt 0 ]; then
       gnomad_option="--custom gnomad.vcf.gz,gnomAD,vcf,exact,0,~{sep=',' gnomad_infos}"
     fi
 
-    vep \
+
+    # Unpack contents of cache into $VEP_CACHE/
+    # Note that $VEP_CACHE is a default ENV variable set in VEP docker
+    tar -xzvf ~{vep_cache_tarball} -C $VEP_CACHE/
+
+    # Relocate other_vep_files to execution directory
+    #if [ ~{defined(other_vep_files)} == "true" ]; then
+    #  while read file; do
+    #    mv $file .
+    #  done < ~{write_lines(select_all(other_vep_files))}
+    #fi
+
+        vep \
       --input_file ~{vcf} \
       --format vcf \
       --output_file ~{out_filename} \
